@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница не найдена - 404</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .error-code {
+            font-size: 8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            line-height: 1;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .error-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin: 20px 0 15px;
+            font-weight: 700;
+        }
+        
+        .error-message {
+            font-size: 1.2em;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+        
+        .error-illustration {
+            font-size: 6em;
+            margin-bottom: 30px;
+            animation: bounce 2s infinite;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn-go-home {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid transparent;
+        }
+        
+        .btn-go-back {
+            background: transparent;
+            color: #3498db;
+            padding: 14px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid #3498db;
+        }
+        
+        .btn-go-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-go-back:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.2);
+        }
+        
+        .error-search {
+            margin-top: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            outline: none;
+        }
+        
+        .search-box button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #2980b9;
+        }
+        
+        .error-links {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .error-link {
+            color: #3498db;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .error-link:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-container > * {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .error-code {
+            animation-delay: 0.1s;
+        }
+        
+        .error-title {
+            animation-delay: 0.2s;
+        }
+        
+        .error-message {
+            animation-delay: 0.3s;
+        }
+        
+        .error-actions {
+            animation-delay: 0.4s;
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 6em;
+            }
+            
+            .error-title {
+                font-size: 2em;
+            }
+            
+            .error-illustration {
+                font-size: 4em;
+            }
+            
+            .error-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-go-home,
+            .btn-go-back {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .error-help {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 100%;
+            border-left: 4px solid #3498db;
+        }
+        
+        .error-help h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .error-help ul {
+            text-align: left;
+            padding-left: 20px;
+            color: #666;
+        }
+        
+        .error-help li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-container">
+            <div class="error-illustration">🔍</div>
+            <h1 class="error-code">404</h1>
+            <h2 class="error-title">Страница не найдена</h2>
+            <p class="error-message">
+                К сожалению, запрашиваемая вами страница не существует или была перемещена.
+                Возможно, вы ввели неправильный адрес или страница была удалена.
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn-go-home">
+                    <span>🏠</span> На главную
+                </a>
+                <button onclick="history.back()" class="btn-go-back">
+                    <span>↩️</span> Вернуться назад
+                </button>
+            </div>
+            
+            <div class="error-search">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Что вы ищете? Введите ключевое слово...">
+                    <button onclick="searchOnSite()">
+                        <span>🔍</span> Искать
+                    </button>
+                </div>
+            </div>
+            
+            <div class="error-help">
+                <h3>Возможно, вы искали:</h3>
+                <ul>
+                    <li><a href="/" class="error-link">Главная страница</a> - Вход в систему</li>
+                    <li><a href="/register" class="error-link">Регистрация</a> - Создание нового аккаунта</li>
+                    <li><a href="/dashboard" class="error-link">Личный кабинет</a> - Ваши карточки и прогресс</li>
+                    {% if current_user and current_user.is_admin %}
+                    <li><a href="/admin/cards" class="error-link">Админка: Карточки</a> - Управление словами</li>
+                    <li><a href="/admin/users" class="error-link">Админка: Пользователи</a> - Управление аккаунтами</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <div class="error-links">
+                <a href="/" class="error-link">Главная</a>
+                <a href="/dashboard" class="error-link">Дашборд</a>
+                {% if current_user and current_user.is_admin %}
+                <a href="/admin/cards" class="error-link">Карточки</a>
+                <a href="/admin/users" class="error-link">Пользователи</a>
+                {% endif %}
+                <a href="mailto:support@example.com" class="error-link">Поддержка</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelector('.btn-go-back').addEventListener('click', function() {
+            this.innerHTML = '<span>⏳</span> Возвращаемся...';
+            setTimeout(() => {
+                if (document.referrer) {
+                    window.location.href = document.referrer;
+                } else {
+                    window.location.href = '/';
+                }
+            }, 500);
+        });
+        
+        function searchOnSite() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) {
+                alert(`Поиск по сайту: "${searchTerm}"\n\nВ реальном проекте здесь будет реализован поиск по контенту.`);
+                document.getElementById('searchInput').value = '';
+            }
+        }
+        
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchOnSite();
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.error-container > *');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${0.1 * (index + 1)}s`;
+            });
+        });
+        
+        setTimeout(() => {
+            document.getElementById('searchInput').focus();
+        }, 1000);
+        
+        console.log('404 ошибка для URL:', window.location.href);
+        console.log('Возможные причины:');
+        console.log('1. Неправильный URL');
+        console.log('2. Страница была удалена');
+        console.log('3. Ошибка в ссылке');
+        
+        function send404Analytics() {
+            const data = {
+                url: window.location.href,
+                referrer: document.referrer,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            console.log('404 Analytics:', data);
+        }
+        
+        send404Analytics();
+    </script>
+</body>
+</html>

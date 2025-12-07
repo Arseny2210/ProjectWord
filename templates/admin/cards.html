@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Админка - Управление карточками</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+     <div class="container">
+        <div class="main-card">
+            <h1>👑 Панель администратора</h1>
+            <p>Здесь вы можете добавлять и удалять карточки для пользователей.</p>
+            
+            <div class="admin-container">
+                <!-- Форма создания карточки -->
+                <div class="create-form">
+                    <h2>➕ Создать новую карточку</h2>
+                    <form action="/cards/create" method="post">
+                        <label for="foreign_word">Английское слово:</label>
+                        <input type="text" id="foreign_word" name="foreign_word" placeholder="Например: Hello" required>
+                        
+                        <label for="native_translation">Перевод на русский:</label>
+                        <input type="text" id="native_translation" name="native_translation" placeholder="Например: Привет" required>
+                        
+                        <label for="example">Пример использования (необязательно):</label>
+                        <input type="text" id="example" name="example" placeholder="Например: Hello, how are you?">
+                        
+                        <button type="submit" class="submit-btn">➕ Добавить карточку</button>
+                    </form>
+                </div>
+                
+                <!-- Список всех карточек -->
+                <div class="cards-list">
+                    <h2>📋 Все карточки ({{ cards|length }})</h2>
+                    
+                    {% if cards %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Английское слово</th>
+                                <th>Перевод</th>
+                                <th>Пример</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for card in cards %}
+                            <tr>
+                                <td>
+                                    <div class="text-center">
+                                        <div class="card-order">{{ loop.index }}</div>
+                                    </div>
+                                </td>
+                                <td><strong>{{ card.foreign_word }}</strong></td>
+                                <td>{{ card.native_translation }}</td>
+                                <td>{{ card.example if card.example else "-" }}</td>
+                                <td class="actions">
+                                    <form action="/cards/{{ card.id }}/delete" method="post" style="display: inline;">
+                                        <button type="submit" class="delete-btn" onclick="return confirm('Удалить карточку \"{{ card.foreign_word }}\"?')">🗑️ Удалить</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Пока нет карточек</h3>
+                        <p>Добавьте первую карточку с помощью формы слева.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="text-center mt-40">
+                <a href="/dashboard" class="btn btn-logout">
+                    <span>←</span> Вернуться в дашборд
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="mt-30 text-center">
+        <a href="/admin/users" class="btn btn-primary">
+            <span>👥</span> Управление пользователями
+        </a>
+        <a href="/dashboard" class="btn btn-logout">
+            <span>←</span> Вернуться в дашборд
+        </a>
+    </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function() {
+            setTimeout(function() {
+                document.querySelector('form').reset();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

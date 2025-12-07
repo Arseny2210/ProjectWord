@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="card">
+        <h2>🔐 Вход</h2>
+        <form method="post" action="/auth/login-web">
+            <p><input type="text" name="username" placeholder="Имя пользователя" required></p>
+            <p><input type="password" name="password" placeholder="Пароль" required></p>
+            <button type="submit" class="btn">Войти</button>
+        </form>
+        <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+        {% if error %}
+            <p style="color: #e74c3c;">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

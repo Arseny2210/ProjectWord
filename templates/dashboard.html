@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="main-card">
+        <h2>👋 Добро пожаловать, {{ user.username }}!</h2>
+        
+        {% if is_admin %}
+            <!-- Дашборд для администратора -->
+            <div class="admin-dashboard">
+                <h3>👑 Панель администратора</h3>
+                <div class="progress-card">
+                    <div class="progress-stats">
+                        <div class="stat">
+                            <span class="stat-number">{{ admin_stats.total_cards }}</span>
+                            <span class="stat-label">Всего карточек</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-40 text-center">
+                    <a href="/admin/cards" class="btn btn-primary">
+                        <span>📚</span> Управление карточками
+                    </a>
+                    <a href="/admin/users" class="btn btn-primary" style="margin-left: 15px;">
+                        <span>👥</span> Управление пользователями
+                    </a>
+                </div>
+                
+                <div class="mt-40 text-center">
+                    <a href="/logout" class="btn btn-logout">
+                        <span>🚪</span> Выйти из системы
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <!-- Дашборд для обычного пользователя -->
+            <div class="user-dashboard">
+                <div class="progress-card">
+                    <h3>📊 Ваш прогресс в изучении</h3>
+                    <div class="progress-stats">
+                        <div class="stat">
+                            <span class="stat-number">{{ progress.total_cards }}</span>
+                            <span class="stat-label">Всего карточек</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">{{ progress.completed_cards }}</span>
+                            <span class="stat-label">Выучено</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">{{ progress.remaining_cards }}</span>
+                            <span class="stat-label">Осталось</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mt-50">📚 Карточки для изучения</h3>
+                
+                {% if cards %}
+                    <div class="cards-grid">
+                        {% for card in cards %}
+                            <div class="card-item {% if card.is_completed %}learned{% else %}learning{% endif %}">
+                                <div class="card-decoration"></div>
+                                
+                                <div class="card-header">
+                                    <h4>{{ card.foreign_word }}</h4>
+                                    {% if card.is_completed %}
+                                        <div class="card-badge badge-completed">✅ Выучено</div>
+                                    {% else %}
+                                        <div class="card-badge badge-learning">📚 Изучаю</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-content">
+                                    <div class="card-info {% if card.is_completed %}learned{% else %}learning{% endif %}">
+                                        <p><strong>Перевод:</strong> {{ card.native_translation }}</p>
+                                    </div>
+                                    
+                                    {% if card.example %}
+                                        <div class="card-example">
+                                            <p><strong>Пример:</strong> {{ card.example }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-actions">
+                                    {% if card.is_completed %}
+                                        <form action="/unlearn/{{ card.id }}" method="post" class="w-100">
+                                            <button type="submit" class="card-btn unlearn-btn">
+                                                <span>↩️</span> Вернуть в изучение
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form action="/learn/{{ card.id }}" method="post" class="w-100">
+                                            <button type="submit" class="card-btn learn-btn">
+                                                <span>✅</span> Отметить как выученное
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Пока нет карточек для изучения</h3>
+                        <p>Администратор еще не добавил слова в систему.</p>
+                        <p class="mt-20">Ожидайте, пока будут добавлены новые карточки!</p>
+                    </div>
+                {% endif %}
+                
+                <div class="mt-50 text-center">
+                    <a href="/logout" class="btn btn-logout">
+                        <span>🚪</span> Выйти из системы
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.w-100 {
+    width: 100%;
+}
+</style>
+{% endblock %}
