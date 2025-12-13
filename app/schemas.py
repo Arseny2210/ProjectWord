@@ -1,11 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 from typing import Optional
 from datetime import datetime
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя (3–50 символов)")
+    password: str = Field(..., min_length=6, description="Пароль (минимум 6 символов, максимум 72 байта)")
 
+    @validator('password')
+    def validate_password_length_bytes(cls, v):
+        password_bytes = v.encode('utf-8')
+        if len(password_bytes) > 72:
+            raise ValueError('Пароль не должен превышать 72 байта (ограничение bcrypt)')
+        return v
 class UserOut(BaseModel):
     id: int
     username: str

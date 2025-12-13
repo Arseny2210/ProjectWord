@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ошибка валидации данных</title>
+	<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+	<div class="container error-page">
+		<div class="error-content">
+			<div class="error-icon">⚠️</div>
+			<h1 class="error-title">Некорректные данные</h1>
+			<p class="error-description">
+				Пожалуйста, проверьте введённую информацию и попробуйте снова.
+				Все поля должны быть заполнены корректно.
+			</p>
+
+			<div class="error-actions">
+				<a href="javascript:history.back()" class="btn btn-error btn-error-secondary">
+					<span class="emoji">←</span> Вернуться назад
+				</a>
+				<a href="/" class="btn btn-error btn-error-primary">
+					<span class="emoji">🏠</span> На главную
+				</a>
+			</div>
+
+			<div class="error-search mt-40">
+				<div class="auth-container" style="max-width: 100%; padding: 25px;">
+					<h3 class="text-center mb-20">Что можно проверить:</h3>
+					<ul style="text-align: left; line-height: 1.8; color: #495057; padding-left: 20px;">
+						<li>Пароль должен быть не короче 6 символов</li>
+						<li>Имя пользователя должно быть уникальным</li>
+						<li>Все поля должны быть заполнены</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

@@ -1,8 +1,8 @@
+from typing import Any
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse, HTMLResponse
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from sqlalchemy import select, delete
 from app.api import users, cards, progress, auth_routes
 from app.database import Base, engine, get_db
@@ -11,7 +11,6 @@ from app.auth import get_user_from_cookie, require_admin_cookie
 import sqlalchemy
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import JSONResponse
 from datetime import datetime
 
 app = FastAPI(
@@ -21,25 +20,21 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+templates = Jinja2Templates(directory="templates")
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """
     Обработчик для всех HTTP исключений
     """
     if exc.status_code == 404:
-        templates = Jinja2Templates(directory="templates")
-        
         try:
-            db_gen = get_db()
-            db = await anext(db_gen)
-            current_user = await get_user_from_cookie(request, db)
+            async for db in get_db():
+                current_user = await get_user_from_cookie(request, db)
+                break
         except Exception:
             current_user = None
-        finally:
-            try:
-                await db_gen.aclose()
-            except:
-                pass
         
         return templates.TemplateResponse(
             "404.html",
@@ -52,6 +47,33 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             status_code=404
         )
     
+    # Для JSON-запросов возвращаем JSON
+    if "application/json" in request.headers.get("accept", ""):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+    
+    # Для HTML-запросов показываем страницу ошибки
+    if exc.status_code == 401:
+        return templates.TemplateResponse(
+            "401.html",
+            {
+                "request": request,
+                "timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
+            },
+            status_code=401
+        )
+    elif exc.status_code == 403:
+        return templates.TemplateResponse(
+            "403.html",
+            {
+                "request": request,
+                "error_message": "Доступ запрещен"
+            },
+            status_code=403
+        )
+    
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
@@ -59,13 +81,45 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """
-    Обработчик ошибок валидации
-    """
+    accept = request.headers.get("accept", "")
+
+    wants_html = (
+        "text/html" in accept.lower()
+        or request.headers.get("content-type", "").startswith("application/x-www-form-urlencoded")
+    )
+
+    if wants_html:
+        current_user = None
+        try:
+            async for db in get_db():
+                current_user = await get_user_from_cookie(request, db)
+                break
+        except Exception:
+            pass
+
+        error_messages = []
+        for error in exc.errors():
+            loc = " -> ".join(str(x) for x in error.get("loc", []))
+            msg = error.get("msg", "Ошибка валидации")
+            error_messages.append(f"{loc}: {msg}")
+
+        return templates.TemplateResponse(
+            "422.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "error_message": "Проверьте введённые данные",
+                "validation_errors": error_messages,
+            },
+            status_code=422,
+        )
+
+    # API / JSON
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors(), "body": exc.body},
+        content={"detail": exc.errors()},
     )
+
 
 @app.on_event("startup")
 async def init_models():
@@ -91,20 +145,20 @@ async def init_models():
         
         await conn.commit()
 
-app.include_router(auth_routes.router, prefix="/auth", tags=["Auth"])
-app.include_router(cards.router, prefix="/cards", tags=["Cards"])
-app.include_router(users.router, prefix="/admin/users", tags=["Admin – Users"])
-app.include_router(progress.router, prefix="/progress", tags=["Progress"])
+app.include_router(auth_routes.router, prefix="/auth")
+app.include_router(cards.router, prefix="/cards")
+app.include_router(users.router, prefix="/admin/users")
+app.include_router(progress.router, prefix="/progress")
 
-templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False, response_model=None)
+@app.get("/", response_model=None, response_class=HTMLResponse, include_in_schema=False)
 async def index(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+
 @app.get("/dev/make-admin/{username}", include_in_schema=False)
-async def dev_make_admin(username: str, db: AsyncSession = Depends(get_db)):
+async def dev_make_admin(username: str, db: Any = Depends(get_db)):
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
     if user:
@@ -113,15 +167,15 @@ async def dev_make_admin(username: str, db: AsyncSession = Depends(get_db)):
         return {"status": "ok", "message": f"{username} назначен администратором"}
     return {"status": "error", "message": "Пользователь не найден"}
 
-@app.get("/register", response_class=HTMLResponse, include_in_schema=False, response_model=None)
+@app.get("/register", response_model=None, response_class=HTMLResponse, include_in_schema=False)
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
-@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False, response_model=None)
+@app.get("/dashboard", response_model=None, response_class=HTMLResponse, include_in_schema=False)
 async def dashboard(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_user_from_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(get_user_from_cookie)
 ):
     if not current_user:
         return RedirectResponse("/", status_code=303)
@@ -237,11 +291,11 @@ async def dashboard(
             }
         })
 
-@app.get("/admin/cards", response_class=HTMLResponse, include_in_schema=False, response_model=None)
+@app.get("/admin/cards", response_model=None, response_class=HTMLResponse, include_in_schema=False)
 async def admin_cards_page(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(require_admin_cookie)
 ):
     if not current_user or not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Требуются права администратора")
@@ -280,11 +334,11 @@ async def admin_cards_page(
         "cards": cards_data
     })
 
-@app.get("/admin/users", response_class=HTMLResponse, include_in_schema=False, response_model=None)
+@app.get("/admin/users", response_model=None, response_class=HTMLResponse, include_in_schema=False)
 async def admin_users_page(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(require_admin_cookie)
 ):
     if not current_user or not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Требуются права администратора")
@@ -316,12 +370,12 @@ async def admin_users_page(
         "current_user_id": current_user.id
     })
 
-@app.post("/admin/users/{user_id}/toggle-active", include_in_schema=False, response_model=None)
+@app.post("/admin/users/{user_id}/toggle-active", include_in_schema=False)
 async def toggle_user_active(
     user_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(require_admin_cookie)
 ):
     if not current_user or not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Требуются права администратора")
@@ -340,12 +394,12 @@ async def toggle_user_active(
     
     return RedirectResponse("/admin/users", status_code=303)
 
-@app.post("/admin/users/{user_id}/delete", include_in_schema=False, response_model=None)
+@app.post("/admin/users/{user_id}/delete", include_in_schema=False)
 async def delete_user_admin(
     user_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(require_admin_cookie)
 ):
     if not current_user or not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Требуются права администратора")
@@ -361,7 +415,7 @@ async def delete_user_admin(
     
     try:
         await db.execute(delete(Progress).where(Progress.user_id == user_id))
-        
+        await db.execute(delete(UserCardProgress).where(UserCardProgress.user_id == user_id))
         await db.execute(delete(User).where(User.id == user_id))
         
         await db.commit()
@@ -372,12 +426,12 @@ async def delete_user_admin(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Ошибка при удалении: {str(e)}")
 
-@app.post("/admin/users/{user_id}/toggle-admin", include_in_schema=False, response_model=None)
+@app.post("/admin/users/{user_id}/toggle-admin", include_in_schema=False)
 async def toggle_user_admin(
     user_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(require_admin_cookie)
 ):
     if not current_user or not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Требуются права администратора")
@@ -396,12 +450,12 @@ async def toggle_user_admin(
     
     return RedirectResponse("/admin/users", status_code=303)
 
-@app.post("/learn/{card_id}", include_in_schema=False, response_model=None)
+@app.post("/learn/{card_id}", include_in_schema=False)
 async def learn_card(
     card_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_user_from_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(get_user_from_cookie)
 ):
     if not current_user or current_user.is_admin:
         return RedirectResponse("/dashboard", status_code=303)
@@ -458,12 +512,12 @@ async def learn_card(
     
     return RedirectResponse("/dashboard", status_code=303)
 
-@app.post("/unlearn/{card_id}", include_in_schema=False, response_model=None)
+@app.post("/unlearn/{card_id}", include_in_schema=False)
 async def unlearn_card(
     card_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_user_from_cookie)
+    db: Any = Depends(get_db),
+    current_user: Any = Depends(get_user_from_cookie)
 ):
     if not current_user or current_user.is_admin:
         return RedirectResponse("/dashboard", status_code=303)
@@ -505,7 +559,7 @@ async def unlearn_card(
     
     return RedirectResponse("/dashboard", status_code=303)
 
-@app.get("/logout", include_in_schema=False, response_model=None)
+@app.get("/logout", response_model=None, include_in_schema=False)
 async def logout():
     response = RedirectResponse("/", status_code=303)
     response.delete_cookie("access_token")

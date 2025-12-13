@@ -66,22 +66,22 @@ async def require_admin(current_user: User = Depends(get_current_active_user)) -
 async def get_user_from_cookie(
     request: Request,
     db: AsyncSession = Depends(get_db)
-) -> Optional[User]:
-    """Получение пользователя из cookie (для веб-интерфейса)"""
+):
     token = request.cookies.get("access_token")
     if not token:
         return None
-    
+    if token.startswith("Bearer "):
+        token = token[7:]
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        user_id = payload.get("sub")
+        if not user_id:
             return None
+
         result = await db.execute(select(User).where(User.id == int(user_id)))
         user = result.scalar_one_or_none()
-        if user and not user.is_active:
-            return None
-        return user
+        return user if user and user.is_active else None
+
     except JWTError:
         return None
 
