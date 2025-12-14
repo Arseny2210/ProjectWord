@@ -152,12 +152,12 @@ app.include_router(progress.router, prefix="/progress")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-@app.get("/", response_model=None, response_class=HTMLResponse, include_in_schema=False)
+@app.get("/", response_model=None, response_class=HTMLResponse,tags=["🌐 WEB"])
 async def index(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-@app.get("/dev/make-admin/{username}", include_in_schema=False)
+@app.get("/dev/make-admin/{username}",tags=["🌐 WEB"])
 async def dev_make_admin(username: str, db: Any = Depends(get_db)):
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
@@ -167,11 +167,11 @@ async def dev_make_admin(username: str, db: Any = Depends(get_db)):
         return {"status": "ok", "message": f"{username} назначен администратором"}
     return {"status": "error", "message": "Пользователь не найден"}
 
-@app.get("/register", response_model=None, response_class=HTMLResponse, include_in_schema=False)
+@app.get("/register", response_model=None, response_class=HTMLResponse, tags=["🌐 WEB"])
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
-@app.get("/dashboard", response_model=None, response_class=HTMLResponse, include_in_schema=False)
+@app.get("/dashboard", response_model=None, response_class=HTMLResponse, tags=["🌐 WEB"])
 async def dashboard(
     request: Request,
     db: Any = Depends(get_db),
@@ -291,7 +291,7 @@ async def dashboard(
             }
         })
 
-@app.get("/admin/cards", response_model=None, response_class=HTMLResponse, include_in_schema=False)
+@app.get("/admin/cards", response_model=None, response_class=HTMLResponse, tags=["🌐 WEB"])
 async def admin_cards_page(
     request: Request,
     db: Any = Depends(get_db),
@@ -334,7 +334,7 @@ async def admin_cards_page(
         "cards": cards_data
     })
 
-@app.get("/admin/users", response_model=None, response_class=HTMLResponse, include_in_schema=False)
+@app.get("/admin/users", response_model=None, response_class=HTMLResponse, tags=["🌐 WEB"])
 async def admin_users_page(
     request: Request,
     db: Any = Depends(get_db),
@@ -370,7 +370,7 @@ async def admin_users_page(
         "current_user_id": current_user.id
     })
 
-@app.post("/admin/users/{user_id}/toggle-active", include_in_schema=False)
+@app.post("/admin/users/{user_id}/toggle-active",tags=["🌐 WEB"])
 async def toggle_user_active(
     user_id: int,
     request: Request,
@@ -394,7 +394,7 @@ async def toggle_user_active(
     
     return RedirectResponse("/admin/users", status_code=303)
 
-@app.post("/admin/users/{user_id}/delete", include_in_schema=False)
+@app.post("/admin/users/{user_id}/delete", tags=["🌐 WEB"])
 async def delete_user_admin(
     user_id: int,
     request: Request,
@@ -426,7 +426,7 @@ async def delete_user_admin(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Ошибка при удалении: {str(e)}")
 
-@app.post("/admin/users/{user_id}/toggle-admin", include_in_schema=False)
+@app.post("/admin/users/{user_id}/toggle-admin",tags=["🌐 WEB"])
 async def toggle_user_admin(
     user_id: int,
     request: Request,
@@ -450,7 +450,7 @@ async def toggle_user_admin(
     
     return RedirectResponse("/admin/users", status_code=303)
 
-@app.post("/learn/{card_id}", include_in_schema=False)
+@app.post("/learn/{card_id}", tags=["🌐 WEB"])
 async def learn_card(
     card_id: int,
     request: Request,
@@ -512,7 +512,7 @@ async def learn_card(
     
     return RedirectResponse("/dashboard", status_code=303)
 
-@app.post("/unlearn/{card_id}", include_in_schema=False)
+@app.post("/unlearn/{card_id}", tags=["🌐 WEB"])
 async def unlearn_card(
     card_id: int,
     request: Request,
@@ -559,7 +559,7 @@ async def unlearn_card(
     
     return RedirectResponse("/dashboard", status_code=303)
 
-@app.get("/logout", response_model=None, include_in_schema=False)
+@app.get("/logout", response_model=None, tags=["🌐 WEB"])
 async def logout():
     response = RedirectResponse("/", status_code=303)
     response.delete_cookie("access_token")
